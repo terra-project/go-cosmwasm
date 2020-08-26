@@ -174,8 +174,8 @@ checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 
 [[package]]
 name = "cosmwasm-std"
-version = "0.10.0"
-source = "git+https://github.com/terra-project/cosmwasm?branch=interrupt-signal-propagation#7b3a82f5c0321f92fc4d3d1c9e6082c2a410bbe7"
+version = "0.10.1"
+source = "git+https://github.com/terra-project/cosmwasm?branch=interrupt-signal-propagation#a7204f20c97bbb68aa0383cd89f759062f7ae031"
 dependencies = [
  "base64",
  "schemars",
@@ -186,8 +186,8 @@ dependencies = [
 
 [[package]]
 name = "cosmwasm-vm"
-version = "0.10.0"
-source = "git+https://github.com/terra-project/cosmwasm?branch=interrupt-signal-propagation#7b3a82f5c0321f92fc4d3d1c9e6082c2a410bbe7"
+version = "0.10.1"
+source = "git+https://github.com/terra-project/cosmwasm?branch=interrupt-signal-propagation#a7204f20c97bbb68aa0383cd89f759062f7ae031"
 dependencies = [
  "cosmwasm-std",
  "hex",
@@ -457,7 +457,7 @@ checksum = "bcc8e0c9bce37868955864dbecd2b1ab2bdf967e6f28066d65aaac620444b65c"
 
 [[package]]
 name = "go-cosmwasm"
-version = "0.10.0"
+version = "0.10.1"
 dependencies = [
  "cbindgen",
  "cosmwasm-std",

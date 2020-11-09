@@ -19,17 +19,19 @@ use std::str::from_utf8;
 use crate::error::{clear_error, handle_c_error, set_error, Error};
 use cosmwasm_vm::{
     call_handle_raw, call_init_raw, call_migrate_raw, call_query_raw, features_from_csv, Checksum,
-    CosmCache, Extern,
+    Cache, Extern, CacheOptions, Size
 };
+
+const MEMORY_CACHE_SIZE: Size = Size::mebi(500); // TODO: Make configurable
 
 #[repr(C)]
 pub struct cache_t {}
 
-fn to_cache(ptr: *mut cache_t) -> Option<&'static mut CosmCache<DB, GoApi, GoQuerier>> {
+fn to_cache(ptr: *mut cache_t) -> Option<&'static mut Cache<DB, GoApi, GoQuerier>> {
     if ptr.is_null() {
         None
     } else {
-        let c = unsafe { &mut *(ptr as *mut CosmCache<DB, GoApi, GoQuerier>) };
+        let c = unsafe { &mut *(ptr as *mut Cache<DB, GoApi, GoQuerier>) };
         Some(c)
     }
 }
@@ -77,7 +79,7 @@ static GAS_USED_ARG: &str = "gas_used";
 fn do_init_cache(
     data_dir: Buffer,
     supported_features: Buffer,
-) -> Result<*mut CosmCache<DB, GoApi, GoQuerier>, Error> {
+) -> Result<*mut Cache<DB, GoApi, GoQuerier>, Error> {
     let dir = unsafe { data_dir.read() }.ok_or_else(|| Error::empty_arg(DATA_DIR_ARG))?;
     let dir_str = from_utf8(dir)?;
     // parse the supported features
@@ -85,7 +87,12 @@ fn do_init_cache(
         unsafe { supported_features.read() }.ok_or_else(|| Error::empty_arg(FEATURES_ARG))?;
     let features_str = from_utf8(features_bin)?;
     let features = features_from_csv(features_str);
-    let cache = unsafe { CosmCache::new(dir_str, features) }?;
+    let options = CacheOptions {
+        base_dir: dir_str.into(),
+        supported_features: features,
+        memory_cache_size: MEMORY_CACHE_SIZE,
+    };
+    let cache = unsafe { Cache::new(options) }?;
     let out = Box::new(cache);
     Ok(Box::into_raw(out))
 }
@@ -100,7 +107,7 @@ fn do_init_cache(
 pub extern "C" fn release_cache(cache: *mut cache_t) {
     if !cache.is_null() {
         // this will free cache when it goes out of scope
-        let _ = unsafe { Box::from_raw(cache as *mut CosmCache<DB, GoApi, GoQuerier>) };
+        let _ = unsafe { Box::from_raw(cache as *mut Cache<DB, GoApi, GoQuerier>) };
     }
 }
 
@@ -115,7 +122,7 @@ pub extern "C" fn create(cache: *mut cache_t, wasm: Buffer, err: Option<&mut Buf
     Buffer::from_vec(data)
 }
 
-fn do_create(cache: &mut CosmCache<DB, GoApi, GoQuerier>, wasm: Buffer) -> Result<Checksum, Error> {
+fn do_create(cache: &mut Cache<DB, GoApi, GoQuerier>, wasm: Buffer) -> Result<Checksum, Error> {
     let wasm = unsafe { wasm.read() }.ok_or_else(|| Error::empty_arg(WASM_ARG))?;
     let checksum = cache.save_wasm(wasm)?;
     Ok(checksum)
@@ -132,7 +139,7 @@ pub extern "C" fn get_code(cache: *mut cache_t, id: Buffer, err: Option<&mut Buf
     Buffer::from_vec(data)
 }
 
-fn do_get_code(cache: &mut CosmCache<DB, GoApi, GoQuerier>, id: Buffer) -> Result<Vec<u8>, Error> {
+fn do_get_code(cache: &mut Cache<DB, GoApi, GoQuerier>, id: Buffer) -> Result<Vec<u8>, Error> {
     let id: Checksum = unsafe { id.read() }
         .ok_or_else(|| Error::empty_arg(CACHE_ARG))?
         .try_into()?;
@@ -175,7 +182,7 @@ pub extern "C" fn instantiate(
 }
 
 fn do_init(
-    cache: &mut CosmCache<DB, GoApi, GoQuerier>,
+    cache: &mut Cache<DB, GoApi, GoQuerier>,
     code_id: Buffer,
     params: Buffer,
     msg: Buffer,
@@ -228,7 +235,7 @@ pub extern "C" fn handle(
 }
 
 fn do_handle(
-    cache: &mut CosmCache<DB, GoApi, GoQuerier>,
+    cache: &mut Cache<DB, GoApi, GoQuerier>,
     code_id: Buffer,
     params: Buffer,
     msg: Buffer,
@@ -289,7 +296,7 @@ pub extern "C" fn migrate(
 }
 
 fn do_migrate(
-    cache: &mut CosmCache<DB, GoApi, GoQuerier>,
+    cache: &mut Cache<DB, GoApi, GoQuerier>,
     code_id: Buffer,
     params: Buffer,
     msg: Buffer,
@@ -339,7 +346,7 @@ pub extern "C" fn query(
 }
 
 fn do_query(
-    cache: &mut CosmCache<DB, GoApi, GoQuerier>,
+    cache: &mut Cache<DB, GoApi, GoQuerier>,
     code_id: Buffer,
     msg: Buffer,
     db: DB,

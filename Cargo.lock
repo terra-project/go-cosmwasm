@@ -167,6 +167,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "clru"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44e10ee132778350b0390b347b47e4bbb098e23f0ee34ded4a03b078cae19024"
+
+[[package]]
 name = "constant_time_eq"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -174,8 +180,8 @@ checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 
 [[package]]
 name = "cosmwasm-std"
-version = "0.10.1"
-source = "git+https://github.com/terra-project/cosmwasm?branch=interrupt-signal-propagation#a7204f20c97bbb68aa0383cd89f759062f7ae031"
+version = "0.10.2"
+source = "git+https://github.com/terra-project/cosmwasm?tag=v0.10.2#6d04039948897f9442b162ad239803fd623cb410"
 dependencies = [
  "base64",
  "schemars",
@@ -186,9 +192,10 @@ dependencies = [
 
 [[package]]
 name = "cosmwasm-vm"
-version = "0.10.1"
-source = "git+https://github.com/terra-project/cosmwasm?branch=interrupt-signal-propagation#a7204f20c97bbb68aa0383cd89f759062f7ae031"
+version = "0.10.2"
+source = "git+https://github.com/terra-project/cosmwasm?tag=v0.10.2#6d04039948897f9442b162ad239803fd623cb410"
 dependencies = [
+ "clru",
  "cosmwasm-std",
  "hex",
  "memmap",
@@ -1077,7 +1084,8 @@ checksum = "cccddf32554fecc6acb585f82a32a72e28b48f8c4c1883ddfeeeaa96f7d8e519"
 [[package]]
 name = "wasmer-clif-backend"
 version = "0.17.0"
-source = "git+https://github.com/terra-project/wasmer?branch=interrupt-signal-propagation#567a790dae9e428650a5c85e6b4dae82a06bce47"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "691ea323652d540a10722066dbf049936f4367bb22a96f8992a262a942a8b11b"
 dependencies = [
  "byteorder",
  "cranelift-codegen",
@@ -1128,7 +1136,8 @@ dependencies = [
 [[package]]
 name = "wasmer-middleware-common"
 version = "0.17.0"
-source = "git+https://github.com/terra-project/wasmer?branch=interrupt-signal-propagation#567a790dae9e428650a5c85e6b4dae82a06bce47"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd94068186b25fbe5213442648ffe0fa65ee77389bed020404486fd22056cc87"
 dependencies = [
  "wasmer-runtime-core",
 ]
@@ -1136,7 +1145,8 @@ dependencies = [
 [[package]]
 name = "wasmer-runtime-core"
 version = "0.17.0"
-source = "git+https://github.com/terra-project/wasmer?branch=interrupt-signal-propagation#567a790dae9e428650a5c85e6b4dae82a06bce47"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "45d4253f097502423d8b19d54cb18745f61b984b9dbce32424cba7945cfef367"
 dependencies = [
  "bincode",
  "blake3",
@@ -1164,7 +1174,8 @@ dependencies = [
 [[package]]
 name = "wasmer-singlepass-backend"
 version = "0.17.0"
-source = "git+https://github.com/terra-project/wasmer?branch=interrupt-signal-propagation#567a790dae9e428650a5c85e6b4dae82a06bce47"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "37cf84179dd5e92b784f7bc190b237f1184916a6d6d3f87d4dd94ca371a2cc25"
 dependencies = [
  "bincode",
  "byteorder",
@@ -1182,7 +1193,8 @@ dependencies = [
 [[package]]
 name = "wasmer-win-exception-handler"
 version = "0.17.0"
-source = "git+https://github.com/terra-project/wasmer?branch=interrupt-signal-propagation#567a790dae9e428650a5c85e6b4dae82a06bce47"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf22ce6dc66d893099aac853d451bf9443fa8f5443f5bf4fc63f3aebd7b592b1"
 dependencies = [
  "cc",
  "libc",

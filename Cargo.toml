@@ -1,6 +1,6 @@
 [package]
 name = "go-cosmwasm"
-version = "0.10.3"
+version = "0.10.4"
 authors = ["Ethan Frey <ethanfrey@users.noreply.github.com>"]
 edition = "2018"
 description = "Go bindings for cosmwasm contracts"

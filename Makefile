@@ -50,10 +50,10 @@ build-go:
 	go build ./...
 
 test:
-	RUST_BACKTRACE=1 go test -v ./api ./types .
+	RUST_BACKTRACE=1 go test -v ./api ./apiv3 ./types ./typesv3 .
 
 test-safety:
-	GODEBUG=cgocheck=2 go test -race -v -count 1 ./api
+	GODEBUG=cgocheck=2 go test -race -v -count 1 ./api ./apiv3
 
 # Created a release build in a containerized build environment of the static library for Alpine Linux (.a)
 release-build-alpine:

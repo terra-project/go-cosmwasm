@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"github.com/CosmWasm/wasmvm/api"
+	"github.com/CosmWasm/wasmvm/apiv3"
 	"github.com/CosmWasm/wasmvm/types"
+	"github.com/CosmWasm/wasmvm/typesv3"
 )
 
 // CodeID represents an ID for a given wasm code blob, must be generated from this library
@@ -26,11 +28,22 @@ type Querier = types.Querier
 // GasMeter is a read-only version of the sdk gas meter
 type GasMeter = api.GasMeter
 
+// VMVersion is a contract code version
+type VMVersion uint8
+
+// List of VMVersions
+const (
+	VMVersion3 VMVersion = 3
+	VMVersion4 VMVersion = 4
+	VMVersion5 VMVersion = 5
+)
+
 // VM is the main entry point to this library.
 // You should create an instance with its own subdirectory to manage state inside,
 // and call it for all cosmwasm code related actions.
 type VM struct {
 	cache       api.Cache
+	cachev3     apiv3.Cache
 	memoryLimit uint32 // memory limit of each contract execution (in MiB)
 	printDebug  bool
 }
@@ -47,12 +60,19 @@ func NewVM(dataDir string, supportedFeatures string, memoryLimit uint32, printDe
 	if err != nil {
 		return nil, err
 	}
-	return &VM{cache: cache, memoryLimit: memoryLimit, printDebug: printDebug}, nil
+
+	cachev3, err := apiv3.InitCache(dataDir, supportedFeatures, uint64(cacheSize))
+	if err != nil {
+		return nil, err
+	}
+
+	return &VM{cache: cache, cachev3: cachev3, memoryLimit: memoryLimit, printDebug: printDebug}, nil
 }
 
 // Cleanup should be called when no longer using this to free resources on the rust-side
 func (vm *VM) Cleanup() {
 	api.ReleaseCache(vm.cache)
+	apiv3.ReleaseCache(vm.cachev3)
 }
 
 // Create will compile the wasm code, and store the resulting pre-compile
@@ -65,7 +85,11 @@ func (vm *VM) Cleanup() {
 // be instantiated with custom inputs in the future.
 //
 // TODO: return gas cost? Add gas limit??? there is no metering here...
-func (vm *VM) Create(code WasmCode) (CodeID, error) {
+func (vm *VM) Create(code WasmCode, version VMVersion) (CodeID, error) {
+	if version == VMVersion3 {
+		return apiv3.Create(vm.cachev3, code)
+	}
+
 	return api.Create(vm.cache, code)
 }
 
@@ -76,7 +100,11 @@ func (vm *VM) Create(code WasmCode) (CodeID, error) {
 // This can be used so that the (short) code id (hash) is stored in the iavl tree
 // and the larger binary blobs (wasm and pre-compiles) are all managed by the
 // rust library
-func (vm *VM) GetCode(code CodeID) (WasmCode, error) {
+func (vm *VM) GetCode(code CodeID, version VMVersion) (WasmCode, error) {
+	if version == VMVersion3 {
+		return apiv3.GetCode(vm.cachev3, code)
+	}
+
 	return api.GetCode(vm.cache, code)
 }
 
@@ -89,6 +117,7 @@ func (vm *VM) GetCode(code CodeID) (WasmCode, error) {
 // Under the hood, we may recompile the wasm, use a cached native compile, or even use a cached instance
 // for performance.
 func (vm *VM) Instantiate(
+	version VMVersion,
 	code CodeID,
 	env types.Env,
 	info types.MessageInfo,
@@ -99,6 +128,42 @@ func (vm *VM) Instantiate(
 	gasMeter GasMeter,
 	gasLimit uint64,
 ) (*types.InitResponse, uint64, error) {
+	if version == VMVersion3 {
+		envBin, err := json.Marshal(typesv3.Env{
+			Block: typesv3.BlockInfo{
+				Height:  env.Block.Height,
+				Time:    env.Block.Time,
+				ChainID: env.Block.ChainID,
+			},
+			Message:  info,
+			Contract: env.Contract,
+		})
+		if err != nil {
+			return nil, 0, err
+		}
+
+		var gasMeter apiv3.GasMeter = gasMeter
+		data, gasUsed, err := apiv3.Instantiate(vm.cachev3, code, envBin, initMsg, &gasMeter, store, &goapi, &querier, gasLimit)
+		if err != nil {
+			return nil, gasUsed, err
+		}
+
+		var resp typesv3.InitResult
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			return nil, gasUsed, err
+		}
+
+		if resp.Err != nil {
+			return nil, gasUsed, fmt.Errorf("%s", resp.Err)
+		}
+
+		return &types.InitResponse{
+			Messages:   resp.Ok.Messages,
+			Attributes: resp.Ok.Log,
+		}, gasUsed, nil
+	}
+
 	envBin, err := json.Marshal(env)
 	if err != nil {
 		return nil, 0, err
@@ -130,6 +195,7 @@ func (vm *VM) Instantiate(
 // The caller is responsible for passing the correct `store` (which must have been initialized exactly once),
 // and setting the env with relevent info on this instance (address, balance, etc)
 func (vm *VM) Execute(
+	version VMVersion,
 	code CodeID,
 	env types.Env,
 	info types.MessageInfo,
@@ -140,6 +206,42 @@ func (vm *VM) Execute(
 	gasMeter GasMeter,
 	gasLimit uint64,
 ) (*types.HandleResponse, uint64, error) {
+	if version == VMVersion3 {
+		envBin, err := json.Marshal(typesv3.Env{
+			Block: typesv3.BlockInfo{
+				Height:  env.Block.Height,
+				Time:    env.Block.Time,
+				ChainID: env.Block.ChainID,
+			},
+			Message:  info,
+			Contract: env.Contract,
+		})
+		if err != nil {
+			return nil, 0, err
+		}
+
+		var gasMeter apiv3.GasMeter = gasMeter
+		data, gasUsed, err := apiv3.Handle(vm.cachev3, code, envBin, executeMsg, &gasMeter, store, &goapi, &querier, gasLimit)
+		if err != nil {
+			return nil, gasUsed, err
+		}
+
+		var resp typesv3.HandleResult
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			return nil, gasUsed, err
+		}
+		if resp.Err != nil {
+			return nil, gasUsed, fmt.Errorf("%s", resp.Err)
+		}
+
+		return &types.HandleResponse{
+			Messages:   resp.Ok.Messages,
+			Attributes: resp.Ok.Log,
+			Data:       resp.Ok.Data,
+		}, gasUsed, nil
+	}
+
 	envBin, err := json.Marshal(env)
 	if err != nil {
 		return nil, 0, err
@@ -168,6 +270,7 @@ func (vm *VM) Execute(
 // valid json-encoded data to return to the client.
 // The meaning of path and data can be determined by the code. Path is the suffix of the abci.QueryRequest.Path
 func (vm *VM) Query(
+	version VMVersion,
 	code CodeID,
 	env types.Env,
 	queryMsg []byte,
@@ -177,6 +280,25 @@ func (vm *VM) Query(
 	gasMeter GasMeter,
 	gasLimit uint64,
 ) ([]byte, uint64, error) {
+	if version == VMVersion3 {
+		var gasMeter apiv3.GasMeter = gasMeter
+		data, gasUsed, err := apiv3.Query(vm.cachev3, code, queryMsg, &gasMeter, store, &goapi, &querier, gasLimit)
+		if err != nil {
+			return nil, gasUsed, err
+		}
+
+		var resp typesv3.QueryResponse
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			return nil, gasUsed, err
+		}
+		if resp.Err != nil {
+			return nil, gasUsed, fmt.Errorf("%s", resp.Err)
+		}
+
+		return resp.Ok, gasUsed, nil
+	}
+
 	envBin, err := json.Marshal(env)
 	if err != nil {
 		return nil, 0, err
@@ -204,6 +326,7 @@ func (vm *VM) Query(
 //
 // MigrateMsg has some data on how to perform the migration.
 func (vm *VM) Migrate(
+	version VMVersion,
 	code CodeID,
 	env types.Env,
 	info types.MessageInfo,
@@ -214,6 +337,41 @@ func (vm *VM) Migrate(
 	gasMeter GasMeter,
 	gasLimit uint64,
 ) (*types.MigrateResponse, uint64, error) {
+	if version == VMVersion3 {
+		envBin, err := json.Marshal(typesv3.Env{
+			Block: typesv3.BlockInfo{
+				Height:  env.Block.Height,
+				Time:    env.Block.Time,
+				ChainID: env.Block.ChainID,
+			},
+			Message:  info,
+			Contract: env.Contract,
+		})
+		if err != nil {
+			return nil, 0, err
+		}
+
+		var gasMeter apiv3.GasMeter = gasMeter
+		data, gasUsed, err := apiv3.Migrate(vm.cachev3, code, envBin, migrateMsg, &gasMeter, store, &goapi, &querier, gasLimit)
+		if err != nil {
+			return nil, gasUsed, err
+		}
+
+		var resp typesv3.MigrateResult
+		err = json.Unmarshal(data, &resp)
+		if err != nil {
+			return nil, gasUsed, err
+		}
+		if resp.Err != nil {
+			return nil, gasUsed, fmt.Errorf("%s", resp.Err)
+		}
+		return &types.MigrateResponse{
+			Messages:   resp.Ok.Messages,
+			Attributes: resp.Ok.Log,
+			Data:       resp.Ok.Data,
+		}, gasUsed, nil
+	}
+
 	envBin, err := json.Marshal(env)
 	if err != nil {
 		return nil, 0, err

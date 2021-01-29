@@ -30,6 +30,7 @@ type Cache struct {
 }
 
 type Querier = types.Querier
+type GoAPI = types.GoAPI
 
 func InitCache(dataDir string, supportedFeatures string, cacheSize uint32) (Cache, error) {
 	dir := sendSlice([]byte(dataDir))

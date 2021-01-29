@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	wasmvm "github.com/CosmWasm/wasmvm"
 	"io/ioutil"
 	"os"
+
+	wasmvm "github.com/CosmWasm/wasmvm"
 )
 
 const SUPPORTED_FEATURES = "staking"
@@ -28,7 +29,7 @@ func main() {
 		panic(err)
 	}
 
-	id, err := vm.Create(bz)
+	id, err := vm.Create(bz, 4)
 	if err != nil {
 		panic(err)
 	}

@@ -4,29 +4,29 @@ package api
 #include "bindings.h"
 
 // typedefs for _cgo functions (db)
-typedef GoResult (*read_db_fn)(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer key, Buffer *val, Buffer *errOut);
-typedef GoResult (*write_db_fn)(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer key, Buffer val, Buffer *errOut);
-typedef GoResult (*remove_db_fn)(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer key, Buffer *errOut);
-typedef GoResult (*scan_db_fn)(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer start, Buffer end, int32_t order, GoIter *out, Buffer *errOut);
+typedef V3_GoResult (*read_db_fn)(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer key, V3_Buffer *val, V3_Buffer *errOut);
+typedef V3_GoResult (*write_db_fn)(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer key, V3_Buffer val, V3_Buffer *errOut);
+typedef V3_GoResult (*remove_db_fn)(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer key, V3_Buffer *errOut);
+typedef V3_GoResult (*scan_db_fn)(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer start, V3_Buffer end, int32_t order, V3_GoIter *out, V3_Buffer *errOut);
 // iterator
-typedef GoResult (*next_db_fn)(iterator_t idx, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer *key, Buffer *val, Buffer *errOut);
+typedef V3_GoResult (*next_db_fn)(V3_iterator_t idx, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer *key, V3_Buffer *val, V3_Buffer *errOut);
 // and api
-typedef GoResult (*humanize_address_fn)(api_t *ptr, Buffer canon, Buffer *human, Buffer *errOut, uint64_t *used_gas);
-typedef GoResult (*canonicalize_address_fn)(api_t *ptr, Buffer human, Buffer *canon, Buffer *errOut, uint64_t *used_gas);
-typedef GoResult (*query_external_fn)(querier_t *ptr, uint64_t gas_limit, uint64_t *used_gas, Buffer request, Buffer *result, Buffer *errOut);
+typedef V3_GoResult (*humanize_address_fn)(V3_api_t *ptr, V3_Buffer canon, V3_Buffer *human, V3_Buffer *errOut, uint64_t *used_gas);
+typedef V3_GoResult (*canonicalize_address_fn)(V3_api_t *ptr, V3_Buffer human, V3_Buffer *canon, V3_Buffer *errOut, uint64_t *used_gas);
+typedef V3_GoResult (*query_external_fn)(V3_querier_t *ptr, uint64_t gas_limit, uint64_t *used_gas, V3_Buffer request, V3_Buffer *result, V3_Buffer *errOut);
 
 // forward declarations (db)
-GoResult cGet_cgo(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer key, Buffer *val, Buffer *errOut);
-GoResult cSet_cgo(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer key, Buffer val, Buffer *errOut);
-GoResult cDelete_cgo(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer key, Buffer *errOut);
-GoResult cScan_cgo(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer start, Buffer end, int32_t order, GoIter *out, Buffer *errOut);
+V3_GoResult cGetV3_cgo(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer key, V3_Buffer *val, V3_Buffer *errOut);
+V3_GoResult cSetV3_cgo(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer key, V3_Buffer val, V3_Buffer *errOut);
+V3_GoResult cDeleteV3_cgo(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer key, V3_Buffer *errOut);
+V3_GoResult cScanV3_cgo(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer start, V3_Buffer end, int32_t order, V3_GoIter *out, V3_Buffer *errOut);
 // iterator
-GoResult cNext_cgo(iterator_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer *key, Buffer *val, Buffer *errOut);
+V3_GoResult cNextV3_cgo(V3_iterator_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer *key, V3_Buffer *val, V3_Buffer *errOut);
 // api
-GoResult cHumanAddress_cgo(api_t *ptr, Buffer canon, Buffer *human, Buffer *errOut, uint64_t *used_gas);
-GoResult cCanonicalAddress_cgo(api_t *ptr, Buffer human, Buffer *canon, Buffer *errOut, uint64_t *used_gas);
+V3_GoResult cHumanAddressV3_cgo(V3_api_t *ptr, V3_Buffer canon, V3_Buffer *human, V3_Buffer *errOut, uint64_t *used_gas);
+V3_GoResult cCanonicalAddressV3_cgo(V3_api_t *ptr, V3_Buffer human, V3_Buffer *canon, V3_Buffer *errOut, uint64_t *used_gas);
 // and querier
-GoResult cQueryExternal_cgo(querier_t *ptr, uint64_t gas_limit, uint64_t *used_gas, Buffer request, Buffer *result, Buffer *errOut);
+V3_GoResult cQueryExternalV3_cgo(V3_querier_t *ptr, uint64_t gas_limit, uint64_t *used_gas, V3_Buffer request, V3_Buffer *result, V3_Buffer *errOut);
 
 
 */
@@ -39,15 +39,14 @@ import (
 	"reflect"
 	"unsafe"
 
-	dbm "github.com/tendermint/tm-db"
-
 	"github.com/CosmWasm/go-cosmwasm/types"
+	dbm "github.com/tendermint/tm-db"
 )
 
 // Note: we have to include all exports in the same file (at least since they both import bindings.h),
 // or get odd cgo build errors about duplicate definitions
 
-func recoverPanic(ret *C.GoResult) {
+func recoverPanic(ret *C.V3_GoResult) {
 	rec := recover()
 	// we don't want to import cosmos-sdk
 	// we also cannot use interfaces to detect these error types (as they have no methods)
@@ -63,14 +62,14 @@ func recoverPanic(ret *C.GoResult) {
 		// TODO figure out how to pass the text in its `Descriptor` field through all the FFI
 		// TODO handle these cases on the Rust side in the first place
 		case "ErrorOutOfGas":
-			*ret = C.GoResult_OutOfGas
+			*ret = C.V3_GoResult_OutOfGas
 		// Looks like this error is not treated specially upstream:
 		// https://github.com/cosmos/cosmos-sdk/blob/4ffabb65a5c07dbb7010da397535d10927d298c1/baseapp/baseapp.go#L818-L853
 		// but this needs to be periodically verified, in case they do start checking for this type
 		// 	case "ErrorGasOverflow":
 		default:
 			log.Printf("Panic in Go callback: %#v\n", rec)
-			*ret = C.GoResult_Panic
+			*ret = C.V3_GoResult_Panic
 		}
 	}
 }
@@ -105,11 +104,11 @@ type KVStore interface {
 	ReverseIterator(start, end []byte) dbm.Iterator
 }
 
-var db_vtable = C.DB_vtable{
-	read_db:   (C.read_db_fn)(C.cGet_cgo),
-	write_db:  (C.write_db_fn)(C.cSet_cgo),
-	remove_db: (C.remove_db_fn)(C.cDelete_cgo),
-	scan_db:   (C.scan_db_fn)(C.cScan_cgo),
+var db_vtable = C.V3_DB_vtable{
+	read_db:   (C.read_db_fn)(C.cGetV3_cgo),
+	write_db:  (C.write_db_fn)(C.cSetV3_cgo),
+	remove_db: (C.remove_db_fn)(C.cDeleteV3_cgo),
+	scan_db:   (C.scan_db_fn)(C.cScanV3_cgo),
 }
 
 type DBState struct {
@@ -131,34 +130,34 @@ func buildDBState(kv KVStore, counter uint64) DBState {
 
 // contract: original pointer/struct referenced must live longer than C.DB struct
 // since this is only used internally, we can verify the code that this is the case
-func buildDB(state *DBState, gm *GasMeter) C.DB {
-	return C.DB{
-		gas_meter: (*C.gas_meter_t)(unsafe.Pointer(gm)),
-		state:     (*C.db_t)(unsafe.Pointer(state)),
+func buildDB(state *DBState, gm *GasMeter) C.V3_DB {
+	return C.V3_DB{
+		gas_meter: (*C.V3_gas_meter_t)(unsafe.Pointer(gm)),
+		state:     (*C.V3_db_t)(unsafe.Pointer(state)),
 		vtable:    db_vtable,
 	}
 }
 
-var iterator_vtable = C.Iterator_vtable{
-	next_db: (C.next_db_fn)(C.cNext_cgo),
+var iterator_vtable = C.V3_Iterator_vtable{
+	next_db: (C.next_db_fn)(C.cNextV3_cgo),
 }
 
 // contract: original pointer/struct referenced must live longer than C.DB struct
 // since this is only used internally, we can verify the code that this is the case
-func buildIterator(dbCounter uint64, it dbm.Iterator) C.iterator_t {
+func buildIterator(dbCounter uint64, it dbm.Iterator) C.V3_iterator_t {
 	idx := storeIterator(dbCounter, it)
-	return C.iterator_t{
+	return C.V3_iterator_t{
 		db_counter:     u64(dbCounter),
 		iterator_index: u64(idx),
 	}
 }
 
-//export cGet
-func cGet(ptr *C.db_t, gasMeter *C.gas_meter_t, usedGas *u64, key C.Buffer, val *C.Buffer, errOut *C.Buffer) (ret C.GoResult) {
+//export cGetV3
+func cGetV3(ptr *C.V3_db_t, gasMeter *C.V3_gas_meter_t, usedGas *u64, key C.V3_Buffer, val *C.V3_Buffer, errOut *C.V3_Buffer) (ret C.V3_GoResult) {
 	defer recoverPanic(&ret)
 	if ptr == nil || gasMeter == nil || usedGas == nil || val == nil {
 		// we received an invalid pointer
-		return C.GoResult_BadArgument
+		return C.V3_GoResult_BadArgument
 	}
 
 	gm := *(*GasMeter)(unsafe.Pointer(gasMeter))
@@ -179,15 +178,15 @@ func cGet(ptr *C.db_t, gasMeter *C.gas_meter_t, usedGas *u64, key C.Buffer, val 
 	// so if we don't write a non-null address to it, it will understand that
 	// the key it requested does not exist in the kv store
 
-	return C.GoResult_Ok
+	return C.V3_GoResult_Ok
 }
 
-//export cSet
-func cSet(ptr *C.db_t, gasMeter *C.gas_meter_t, usedGas *C.uint64_t, key C.Buffer, val C.Buffer, errOut *C.Buffer) (ret C.GoResult) {
+//export cSetV3
+func cSetV3(ptr *C.V3_db_t, gasMeter *C.V3_gas_meter_t, usedGas *C.uint64_t, key C.V3_Buffer, val C.V3_Buffer, errOut *C.V3_Buffer) (ret C.V3_GoResult) {
 	defer recoverPanic(&ret)
 	if ptr == nil || gasMeter == nil || usedGas == nil {
 		// we received an invalid pointer
-		return C.GoResult_BadArgument
+		return C.V3_GoResult_BadArgument
 	}
 
 	gm := *(*GasMeter)(unsafe.Pointer(gasMeter))
@@ -200,15 +199,15 @@ func cSet(ptr *C.db_t, gasMeter *C.gas_meter_t, usedGas *C.uint64_t, key C.Buffe
 	gasAfter := gm.GasConsumed()
 	*usedGas = (C.uint64_t)(gasAfter - gasBefore)
 
-	return C.GoResult_Ok
+	return C.V3_GoResult_Ok
 }
 
-//export cDelete
-func cDelete(ptr *C.db_t, gasMeter *C.gas_meter_t, usedGas *C.uint64_t, key C.Buffer, errOut *C.Buffer) (ret C.GoResult) {
+//export cDeleteV3
+func cDeleteV3(ptr *C.V3_db_t, gasMeter *C.V3_gas_meter_t, usedGas *C.uint64_t, key C.V3_Buffer, errOut *C.V3_Buffer) (ret C.V3_GoResult) {
 	defer recoverPanic(&ret)
 	if ptr == nil || gasMeter == nil || usedGas == nil {
 		// we received an invalid pointer
-		return C.GoResult_BadArgument
+		return C.V3_GoResult_BadArgument
 	}
 
 	gm := *(*GasMeter)(unsafe.Pointer(gasMeter))
@@ -220,15 +219,15 @@ func cDelete(ptr *C.db_t, gasMeter *C.gas_meter_t, usedGas *C.uint64_t, key C.Bu
 	gasAfter := gm.GasConsumed()
 	*usedGas = (C.uint64_t)(gasAfter - gasBefore)
 
-	return C.GoResult_Ok
+	return C.V3_GoResult_Ok
 }
 
-//export cScan
-func cScan(ptr *C.db_t, gasMeter *C.gas_meter_t, usedGas *C.uint64_t, start C.Buffer, end C.Buffer, order i32, out *C.GoIter, errOut *C.Buffer) (ret C.GoResult) {
+//export cScanV3
+func cScanV3(ptr *C.V3_db_t, gasMeter *C.V3_gas_meter_t, usedGas *C.uint64_t, start C.V3_Buffer, end C.V3_Buffer, order i32, out *C.V3_GoIter, errOut *C.V3_Buffer) (ret C.V3_GoResult) {
 	defer recoverPanic(&ret)
 	if ptr == nil || gasMeter == nil || usedGas == nil || out == nil {
 		// we received an invalid pointer
-		return C.GoResult_BadArgument
+		return C.V3_GoResult_BadArgument
 	}
 
 	gm := *(*GasMeter)(unsafe.Pointer(gasMeter))
@@ -251,18 +250,18 @@ func cScan(ptr *C.db_t, gasMeter *C.gas_meter_t, usedGas *C.uint64_t, start C.Bu
 	case 2: // Descending
 		iter = kv.ReverseIterator(s, e)
 	default:
-		return C.GoResult_BadArgument
+		return C.V3_GoResult_BadArgument
 	}
 	gasAfter := gm.GasConsumed()
 	*usedGas = (C.uint64_t)(gasAfter - gasBefore)
 
 	out.state = buildIterator(state.IteratorStackID, iter)
 	out.vtable = iterator_vtable
-	return C.GoResult_Ok
+	return C.V3_GoResult_Ok
 }
 
-//export cNext
-func cNext(ref C.iterator_t, gasMeter *C.gas_meter_t, usedGas *C.uint64_t, key *C.Buffer, val *C.Buffer, errOut *C.Buffer) (ret C.GoResult) {
+//export cNextV3
+func cNextV3(ref C.V3_iterator_t, gasMeter *C.V3_gas_meter_t, usedGas *C.uint64_t, key *C.V3_Buffer, val *C.V3_Buffer, errOut *C.V3_Buffer) (ret C.V3_GoResult) {
 	// typical usage of iterator
 	// 	for ; itr.Valid(); itr.Next() {
 	// 		k, v := itr.Key(); itr.Value()
@@ -272,14 +271,14 @@ func cNext(ref C.iterator_t, gasMeter *C.gas_meter_t, usedGas *C.uint64_t, key *
 	defer recoverPanic(&ret)
 	if ref.db_counter == 0 || gasMeter == nil || usedGas == nil || key == nil || val == nil {
 		// we received an invalid pointer
-		return C.GoResult_BadArgument
+		return C.V3_GoResult_BadArgument
 	}
 
 	gm := *(*GasMeter)(unsafe.Pointer(gasMeter))
 	iter := retrieveIterator(uint64(ref.db_counter), uint64(ref.iterator_index))
 	if !iter.Valid() {
 		// end of iterator, return as no-op, nil key is considered end
-		return C.GoResult_Ok
+		return C.V3_GoResult_Ok
 	}
 
 	gasBefore := gm.GasConsumed()
@@ -295,39 +294,31 @@ func cNext(ref C.iterator_t, gasMeter *C.gas_meter_t, usedGas *C.uint64_t, key *
 		*key = allocateRust(k)
 		*val = allocateRust(v)
 	}
-	return C.GoResult_Ok
+	return C.V3_GoResult_Ok
 }
 
 /***** GoAPI *******/
 
-type HumanizeAddress func([]byte) (string, uint64, error)
-type CanonicalizeAddress func(string) ([]byte, uint64, error)
-
-type GoAPI struct {
-	HumanAddress     HumanizeAddress
-	CanonicalAddress CanonicalizeAddress
+var api_vtable = C.V3_GoApi_vtable{
+	humanize_address:     (C.humanize_address_fn)(C.cHumanAddressV3_cgo),
+	canonicalize_address: (C.canonicalize_address_fn)(C.cCanonicalAddressV3_cgo),
 }
 
-var api_vtable = C.GoApi_vtable{
-	humanize_address:     (C.humanize_address_fn)(C.cHumanAddress_cgo),
-	canonicalize_address: (C.canonicalize_address_fn)(C.cCanonicalAddress_cgo),
-}
-
-// contract: original pointer/struct referenced must live longer than C.GoApi struct
+// contract: original pointer/struct referenced must live longer than C.V3_GoApi struct
 // since this is only used internally, we can verify the code that this is the case
-func buildAPI(api *GoAPI) C.GoApi {
-	return C.GoApi{
-		state:  (*C.api_t)(unsafe.Pointer(api)),
+func buildAPI(api *GoAPI) C.V3_GoApi {
+	return C.V3_GoApi{
+		state:  (*C.V3_api_t)(unsafe.Pointer(api)),
 		vtable: api_vtable,
 	}
 }
 
-//export cHumanAddress
-func cHumanAddress(ptr *C.api_t, canon C.Buffer, human *C.Buffer, errOut *C.Buffer, used_gas *u64) (ret C.GoResult) {
+//export cHumanAddressV3
+func cHumanAddressV3(ptr *C.V3_api_t, canon C.V3_Buffer, human *C.V3_Buffer, errOut *C.V3_Buffer, used_gas *u64) (ret C.V3_GoResult) {
 	defer recoverPanic(&ret)
 	if human == nil {
 		// we received an invalid pointer
-		return C.GoResult_BadArgument
+		return C.V3_GoResult_BadArgument
 	}
 	api := (*GoAPI)(unsafe.Pointer(ptr))
 	c := receiveSlice(canon)
@@ -336,22 +327,22 @@ func cHumanAddress(ptr *C.api_t, canon C.Buffer, human *C.Buffer, errOut *C.Buff
 	if err != nil {
 		// store the actual error message in the return buffer
 		*errOut = allocateRust([]byte(err.Error()))
-		return C.GoResult_User
+		return C.V3_GoResult_User
 	}
 	if len(h) == 0 {
 		panic(fmt.Sprintf("`api.HumanAddress()` returned an empty string for %q", c))
 	}
 	*human = allocateRust([]byte(h))
-	return C.GoResult_Ok
+	return C.V3_GoResult_Ok
 }
 
-//export cCanonicalAddress
-func cCanonicalAddress(ptr *C.api_t, human C.Buffer, canon *C.Buffer, errOut *C.Buffer, used_gas *u64) (ret C.GoResult) {
+//export cCanonicalAddressV3
+func cCanonicalAddressV3(ptr *C.V3_api_t, human C.V3_Buffer, canon *C.V3_Buffer, errOut *C.V3_Buffer, used_gas *u64) (ret C.V3_GoResult) {
 	defer recoverPanic(&ret)
 
 	if canon == nil {
 		// we received an invalid pointer
-		return C.GoResult_BadArgument
+		return C.V3_GoResult_BadArgument
 	}
 
 	api := (*GoAPI)(unsafe.Pointer(ptr))
@@ -361,7 +352,7 @@ func cCanonicalAddress(ptr *C.api_t, human C.Buffer, canon *C.Buffer, errOut *C.
 	if err != nil {
 		// store the actual error message in the return buffer
 		*errOut = allocateRust([]byte(err.Error()))
-		return C.GoResult_User
+		return C.V3_GoResult_User
 	}
 	if len(c) == 0 {
 		panic(fmt.Sprintf("`api.CanonicalAddress()` returned an empty string for %q", h))
@@ -369,30 +360,30 @@ func cCanonicalAddress(ptr *C.api_t, human C.Buffer, canon *C.Buffer, errOut *C.
 	*canon = allocateRust(c)
 
 	// If we do not set canon to a meaningful value, then the other side will interpret that as an empty result.
-	return C.GoResult_Ok
+	return C.V3_GoResult_Ok
 }
 
 /****** Go Querier ********/
 
-var querier_vtable = C.Querier_vtable{
-	query_external: (C.query_external_fn)(C.cQueryExternal_cgo),
+var querier_vtable = C.V3_Querier_vtable{
+	query_external: (C.query_external_fn)(C.cQueryExternalV3_cgo),
 }
 
-// contract: original pointer/struct referenced must live longer than C.GoQuerier struct
+// contract: original pointer/struct referenced must live longer than C.V3_GoQuerier struct
 // since this is only used internally, we can verify the code that this is the case
-func buildQuerier(q *Querier) C.GoQuerier {
-	return C.GoQuerier{
-		state:  (*C.querier_t)(unsafe.Pointer(q)),
+func buildQuerier(q *Querier) C.V3_GoQuerier {
+	return C.V3_GoQuerier{
+		state:  (*C.V3_querier_t)(unsafe.Pointer(q)),
 		vtable: querier_vtable,
 	}
 }
 
-//export cQueryExternal
-func cQueryExternal(ptr *C.querier_t, gasLimit C.uint64_t, usedGas *C.uint64_t, request C.Buffer, result *C.Buffer, errOut *C.Buffer) (ret C.GoResult) {
+//export cQueryExternalV3
+func cQueryExternalV3(ptr *C.V3_querier_t, gasLimit C.uint64_t, usedGas *C.uint64_t, request C.V3_Buffer, result *C.V3_Buffer, errOut *C.V3_Buffer) (ret C.V3_GoResult) {
 	defer recoverPanic(&ret)
 	if ptr == nil || usedGas == nil || result == nil {
 		// we received an invalid pointer
-		return C.GoResult_BadArgument
+		return C.V3_GoResult_BadArgument
 	}
 
 	// query the data
@@ -408,8 +399,8 @@ func cQueryExternal(ptr *C.querier_t, gasLimit C.uint64_t, usedGas *C.uint64_t, 
 	bz, err := json.Marshal(res)
 	if err != nil {
 		*errOut = allocateRust([]byte(err.Error()))
-		return C.GoResult_Other
+		return C.V3_GoResult_Other
 	}
 	*result = allocateRust(bz)
-	return C.GoResult_Ok
+	return C.V3_GoResult_Ok
 }

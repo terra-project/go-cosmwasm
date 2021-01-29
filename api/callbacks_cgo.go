@@ -5,48 +5,48 @@ package api
 #include <stdio.h>
 
 // imports (db)
-GoResult cSet(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer key, Buffer val, Buffer *errOut);
-GoResult cGet(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer key, Buffer *val, Buffer *errOut);
-GoResult cDelete(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer key, Buffer *errOut);
-GoResult cScan(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer start, Buffer end, int32_t order, GoIter *out, Buffer *errOut);
+V3_GoResult cSetV3(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer key, V3_Buffer val, V3_Buffer *errOut);
+V3_GoResult cGetV3(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer key, V3_Buffer *val, V3_Buffer *errOut);
+V3_GoResult cDeleteV3(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer key, V3_Buffer *errOut);
+V3_GoResult cScanV3(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer start, V3_Buffer end, int32_t order, V3_GoIter *out, V3_Buffer *errOut);
 // imports (iterator)
-GoResult cNext(iterator_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer *key, Buffer *val, Buffer *errOut);
+V3_GoResult cNextV3(V3_iterator_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer *key, V3_Buffer *val, V3_Buffer *errOut);
 // imports (api)
-GoResult cHumanAddress(api_t *ptr, Buffer canon, Buffer *human, Buffer *errOut, uint64_t *used_gas);
-GoResult cCanonicalAddress(api_t *ptr, Buffer human, Buffer *canon, Buffer *errOut, uint64_t *used_gas);
+V3_GoResult cHumanAddressV3(V3_api_t *ptr, V3_Buffer canon, V3_Buffer *human, V3_Buffer *errOut, uint64_t *used_gas);
+V3_GoResult cCanonicalAddressV3(V3_api_t *ptr, V3_Buffer human, V3_Buffer *canon, V3_Buffer *errOut, uint64_t *used_gas);
 // imports (querier)
-GoResult cQueryExternal(querier_t *ptr, uint64_t gas_limit, uint64_t *used_gas, Buffer request, Buffer *result, Buffer *errOut);
+V3_GoResult cQueryExternalV3(V3_querier_t *ptr, uint64_t gas_limit, uint64_t *used_gas, V3_Buffer request, V3_Buffer *result, V3_Buffer *errOut);
 
 // Gateway functions (db)
-GoResult cGet_cgo(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer key, Buffer *val, Buffer *errOut) {
-	return cGet(ptr, gas_meter, used_gas, key, val, errOut);
+V3_GoResult cGetV3_cgo(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer key, V3_Buffer *val, V3_Buffer *errOut) {
+	return cGetV3(ptr, gas_meter, used_gas, key, val, errOut);
 }
-GoResult cSet_cgo(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer key, Buffer val, Buffer *errOut) {
-	return cSet(ptr, gas_meter, used_gas, key, val, errOut);
+V3_GoResult cSetV3_cgo(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer key, V3_Buffer val, V3_Buffer *errOut) {
+	return cSetV3(ptr, gas_meter, used_gas, key, val, errOut);
 }
-GoResult cDelete_cgo(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer key, Buffer *errOut) {
-	return cDelete(ptr, gas_meter, used_gas, key, errOut);
+V3_GoResult cDeleteV3_cgo(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer key, V3_Buffer *errOut) {
+	return cDeleteV3(ptr, gas_meter, used_gas, key, errOut);
 }
-GoResult cScan_cgo(db_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer start, Buffer end, int32_t order, GoIter *out, Buffer *errOut) {
-	return cScan(ptr, gas_meter, used_gas, start, end, order, out, errOut);
+V3_GoResult cScanV3_cgo(V3_db_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer start, V3_Buffer end, int32_t order, V3_GoIter *out, V3_Buffer *errOut) {
+	return cScanV3(ptr, gas_meter, used_gas, start, end, order, out, errOut);
 }
 
 // Gateway functions (iterator)
-GoResult cNext_cgo(iterator_t *ptr, gas_meter_t *gas_meter, uint64_t *used_gas, Buffer *key, Buffer *val, Buffer *errOut) {
-	return cNext(ptr, gas_meter, used_gas, key, val, errOut);
+V3_GoResult cNextV3_cgo(V3_iterator_t *ptr, V3_gas_meter_t *gas_meter, uint64_t *used_gas, V3_Buffer *key, V3_Buffer *val, V3_Buffer *errOut) {
+	return cNextV3(ptr, gas_meter, used_gas, key, val, errOut);
 }
 
 // Gateway functions (api)
-GoResult cCanonicalAddress_cgo(api_t *ptr, Buffer human, Buffer *canon, Buffer *errOut, uint64_t *used_gas) {
-    return cCanonicalAddress(ptr, human, canon, errOut, used_gas);
+V3_GoResult cCanonicalAddressV3_cgo(V3_api_t *ptr, V3_Buffer human, V3_Buffer *canon, V3_Buffer *errOut, uint64_t *used_gas) {
+    return cCanonicalAddressV3(ptr, human, canon, errOut, used_gas);
 }
-GoResult cHumanAddress_cgo(api_t *ptr, Buffer canon, Buffer *human, Buffer *errOut, uint64_t *used_gas) {
-    return cHumanAddress(ptr, canon, human, errOut, used_gas);
+V3_GoResult cHumanAddressV3_cgo(V3_api_t *ptr, V3_Buffer canon, V3_Buffer *human, V3_Buffer *errOut, uint64_t *used_gas) {
+    return cHumanAddressV3(ptr, canon, human, errOut, used_gas);
 }
 
 // Gateway functions (querier)
-GoResult cQueryExternal_cgo(querier_t *ptr, uint64_t gas_limit, uint64_t *used_gas, Buffer request, Buffer *result, Buffer *errOut) {
-    return cQueryExternal(ptr, gas_limit, used_gas, request, result, errOut);
+V3_GoResult cQueryExternalV3_cgo(V3_querier_t *ptr, uint64_t gas_limit, uint64_t *used_gas, V3_Buffer request, V3_Buffer *result, V3_Buffer *errOut) {
+    return cQueryExternalV3(ptr, gas_limit, used_gas, request, result, errOut);
 }
 */
 import "C"

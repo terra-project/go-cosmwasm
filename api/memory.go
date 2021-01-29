@@ -7,11 +7,11 @@ import "C"
 
 import "unsafe"
 
-func allocateRust(data []byte) C.Buffer {
-	var ret C.Buffer
+func allocateRust(data []byte) C.V3_Buffer {
+	var ret C.V3_Buffer
 	if data == nil {
 		// Just return a null buffer
-		ret = C.Buffer{
+		ret = C.V3_Buffer{
 			ptr: u8_ptr(nil),
 			len: usize(0),
 			cap: usize(0),
@@ -28,19 +28,19 @@ func allocateRust(data []byte) C.Buffer {
 		// https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=01ced0731171c8226e2c28634a7e41d7
 	} else if len(data) == 0 {
 		// This will create an empty vector
-		ret = C.allocate_rust(u8_ptr(nil), usize(0))
+		ret = C.V3_allocate_rust(u8_ptr(nil), usize(0))
 	} else {
 		// This will allocate a proper vector with content and return a description of it
-		ret = C.allocate_rust(u8_ptr(unsafe.Pointer(&data[0])), usize(len(data)))
+		ret = C.V3_allocate_rust(u8_ptr(unsafe.Pointer(&data[0])), usize(len(data)))
 	}
 	return ret
 }
 
-func sendSlice(s []byte) C.Buffer {
+func sendSlice(s []byte) C.V3_Buffer {
 	if s == nil {
-		return C.Buffer{ptr: u8_ptr(nil), len: usize(0), cap: usize(0)}
+		return C.V3_Buffer{ptr: u8_ptr(nil), len: usize(0), cap: usize(0)}
 	}
-	return C.Buffer{
+	return C.V3_Buffer{
 		ptr: u8_ptr(C.CBytes(s)),
 		len: usize(len(s)),
 		cap: usize(len(s)),
@@ -49,12 +49,12 @@ func sendSlice(s []byte) C.Buffer {
 
 // Take an owned vector that was passed to us, copy it, and then free it on the Rust side.
 // This should only be used for vectors that will never be observed again on the Rust side
-func receiveVector(b C.Buffer) []byte {
+func receiveVector(b C.V3_Buffer) []byte {
 	if bufIsNil(b) {
 		return nil
 	}
 	res := C.GoBytes(unsafe.Pointer(b.ptr), cint(b.len))
-	C.free_rust(b)
+	C.V3_free_rust(b)
 	return res
 }
 
@@ -62,7 +62,7 @@ func receiveVector(b C.Buffer) []byte {
 // Unlike receiveVector, we do not free it, because it will be manually
 // freed on the Rust side after control returns to it.
 //This should be used in places like callbacks from Rust to Go.
-func receiveSlice(b C.Buffer) []byte {
+func receiveSlice(b C.V3_Buffer) []byte {
 	if bufIsNil(b) {
 		return nil
 	}
@@ -70,12 +70,12 @@ func receiveSlice(b C.Buffer) []byte {
 	return res
 }
 
-func freeAfterSend(b C.Buffer) {
+func freeAfterSend(b C.V3_Buffer) {
 	if !bufIsNil(b) {
 		C.free(unsafe.Pointer(b.ptr))
 	}
 }
 
-func bufIsNil(b C.Buffer) bool {
+func bufIsNil(b C.V3_Buffer) bool {
 	return b.ptr == u8_ptr(nil)
 }

@@ -9,7 +9,7 @@ mod tests;
 
 pub use api::GoApi;
 pub use db::{db_t, DB};
-pub use memory::{free_rust, Buffer};
+pub use memory::{V3_free_rust, Buffer};
 pub use querier::GoQuerier;
 
 use std::convert::TryInto;
@@ -45,7 +45,7 @@ fn to_extern(storage: DB, api: GoApi, querier: GoQuerier) -> Extern<DB, GoApi, G
 }
 
 #[no_mangle]
-pub extern "C" fn init_cache(
+pub extern "C" fn V3_init_cache(
     data_dir: Buffer,
     supported_features: Buffer,
     // TODO: remove unused cache size
@@ -104,7 +104,7 @@ fn do_init_cache(
 /// This must be called exactly once for any `*cache_t` returned by `init_cache`
 /// and cannot be called on any other pointer.
 #[no_mangle]
-pub extern "C" fn release_cache(cache: *mut cache_t) {
+pub extern "C" fn V3_release_cache(cache: *mut cache_t) {
     if !cache.is_null() {
         // this will free cache when it goes out of scope
         let _ = unsafe { Box::from_raw(cache as *mut Cache<DB, GoApi, GoQuerier>) };
@@ -112,7 +112,7 @@ pub extern "C" fn release_cache(cache: *mut cache_t) {
 }
 
 #[no_mangle]
-pub extern "C" fn create(cache: *mut cache_t, wasm: Buffer, err: Option<&mut Buffer>) -> Buffer {
+pub extern "C" fn V3_create(cache: *mut cache_t, wasm: Buffer, err: Option<&mut Buffer>) -> Buffer {
     let r = match to_cache(cache) {
         Some(c) => catch_unwind(AssertUnwindSafe(move || do_create(c, wasm)))
             .unwrap_or_else(|_| Err(Error::panic())),
@@ -129,7 +129,7 @@ fn do_create(cache: &mut Cache<DB, GoApi, GoQuerier>, wasm: Buffer) -> Result<Ch
 }
 
 #[no_mangle]
-pub extern "C" fn get_code(cache: *mut cache_t, id: Buffer, err: Option<&mut Buffer>) -> Buffer {
+pub extern "C" fn V3_get_code(cache: *mut cache_t, id: Buffer, err: Option<&mut Buffer>) -> Buffer {
     let r = match to_cache(cache) {
         Some(c) => catch_unwind(AssertUnwindSafe(move || do_get_code(c, id)))
             .unwrap_or_else(|_| Err(Error::panic())),
@@ -148,7 +148,7 @@ fn do_get_code(cache: &mut Cache<DB, GoApi, GoQuerier>, id: Buffer) -> Result<Ve
 }
 
 #[no_mangle]
-pub extern "C" fn instantiate(
+pub extern "C" fn V3_instantiate(
     cache: *mut cache_t,
     contract_id: Buffer,
     params: Buffer,
@@ -209,7 +209,7 @@ fn do_init(
 }
 
 #[no_mangle]
-pub extern "C" fn handle(
+pub extern "C" fn V3_handle(
     cache: *mut cache_t,
     code_id: Buffer,
     params: Buffer,
@@ -262,7 +262,7 @@ fn do_handle(
 }
 
 #[no_mangle]
-pub extern "C" fn migrate(
+pub extern "C" fn V3_migrate(
     cache: *mut cache_t,
     contract_id: Buffer,
     params: Buffer,
@@ -323,7 +323,7 @@ fn do_migrate(
 }
 
 #[no_mangle]
-pub extern "C" fn query(
+pub extern "C" fn V3_query(
     cache: *mut cache_t,
     code_id: Buffer,
     msg: Buffer,

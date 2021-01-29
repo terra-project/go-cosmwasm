@@ -9,12 +9,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-enum ErrnoValue {
-  ErrnoValue_Success = 0,
-  ErrnoValue_Other = 1,
-  ErrnoValue_OutOfGas = 2,
+enum V3_ErrnoValue {
+  V3_ErrnoValue_Success = 0,
+  V3_ErrnoValue_Other = 1,
+  V3_ErrnoValue_OutOfGas = 2,
 };
-typedef int32_t ErrnoValue;
+typedef int32_t V3_ErrnoValue;
 
 /**
  * This enum gives names to the status codes returned from Go callbacks to Rust.
@@ -22,159 +22,162 @@ typedef int32_t ErrnoValue;
  * The go code will return one of these variants when returning.
  *
  */
-enum GoResult {
-  GoResult_Ok = 0,
+enum V3_GoResult {
+  V3_GoResult_Ok = 0,
   /**
    * Go panicked for an unexpected reason.
    */
-  GoResult_Panic = 1,
+  V3_GoResult_Panic = 1,
   /**
    * Go received a bad argument from Rust
    */
-  GoResult_BadArgument = 2,
+  V3_GoResult_BadArgument = 2,
   /**
    * Ran out of gas while using the SDK (e.g. storage)
    */
-  GoResult_OutOfGas = 3,
+  V3_GoResult_OutOfGas = 3,
   /**
    * An error happened during normal operation of a Go callback, which should abort the contract
    */
-  GoResult_Other = 4,
+  V3_GoResult_Other = 4,
   /**
    * An error happened during normal operation of a Go callback, which should be fed back to the contract
    */
-  GoResult_User = 5,
+  V3_GoResult_User = 5,
 };
-typedef int32_t GoResult;
+typedef int32_t V3_GoResult;
 
-typedef struct Buffer {
+typedef struct V3_Buffer {
   uint8_t *ptr;
   uintptr_t len;
   uintptr_t cap;
-} Buffer;
+} V3_Buffer;
 
-typedef struct cache_t {
+typedef struct V3_cache_t {
 
-} cache_t;
+} V3_cache_t;
 
 /**
  * An opaque type. `*gas_meter_t` represents a pointer to Go memory holding the gas meter.
  */
-typedef struct gas_meter_t {
+typedef struct V3_gas_meter_t {
   uint8_t _private[0];
-} gas_meter_t;
+} V3_gas_meter_t;
 
-typedef struct db_t {
+typedef struct V3_db_t {
   uint8_t _private[0];
-} db_t;
+} V3_db_t;
 
-typedef struct iterator_t {
+typedef struct V3_iterator_t {
   uint64_t db_counter;
   uint64_t iterator_index;
-} iterator_t;
+} V3_iterator_t;
 
-typedef struct Iterator_vtable {
-  int32_t (*next_db)(iterator_t, gas_meter_t*, uint64_t*, Buffer*, Buffer*, Buffer*);
-} Iterator_vtable;
+typedef struct V3_Iterator_vtable {
+  int32_t (*next_db)(V3_iterator_t, V3_gas_meter_t*, uint64_t*, V3_Buffer*, V3_Buffer*, V3_Buffer*);
+} V3_Iterator_vtable;
 
-typedef struct GoIter {
-  gas_meter_t *gas_meter;
-  iterator_t state;
-  Iterator_vtable vtable;
-} GoIter;
+typedef struct V3_GoIter {
+  V3_gas_meter_t *gas_meter;
+  V3_iterator_t state;
+  V3_Iterator_vtable vtable;
+} V3_GoIter;
 
-typedef struct DB_vtable {
-  int32_t (*read_db)(db_t*, gas_meter_t*, uint64_t*, Buffer, Buffer*, Buffer*);
-  int32_t (*write_db)(db_t*, gas_meter_t*, uint64_t*, Buffer, Buffer, Buffer*);
-  int32_t (*remove_db)(db_t*, gas_meter_t*, uint64_t*, Buffer, Buffer*);
-  int32_t (*scan_db)(db_t*, gas_meter_t*, uint64_t*, Buffer, Buffer, int32_t, GoIter*, Buffer*);
-} DB_vtable;
+typedef struct V3_DB_vtable {
+  int32_t (*read_db)(V3_db_t*, V3_gas_meter_t*, uint64_t*, V3_Buffer, V3_Buffer*, V3_Buffer*);
+  int32_t (*write_db)(V3_db_t*, V3_gas_meter_t*, uint64_t*, V3_Buffer, V3_Buffer, V3_Buffer*);
+  int32_t (*remove_db)(V3_db_t*, V3_gas_meter_t*, uint64_t*, V3_Buffer, V3_Buffer*);
+  int32_t (*scan_db)(V3_db_t*, V3_gas_meter_t*, uint64_t*, V3_Buffer, V3_Buffer, int32_t, V3_GoIter*, V3_Buffer*);
+} V3_DB_vtable;
 
-typedef struct DB {
-  gas_meter_t *gas_meter;
-  db_t *state;
-  DB_vtable vtable;
-} DB;
+typedef struct V3_DB {
+  V3_gas_meter_t *gas_meter;
+  V3_db_t *state;
+  V3_DB_vtable vtable;
+} V3_DB;
 
-typedef struct api_t {
+typedef struct V3_api_t {
   uint8_t _private[0];
-} api_t;
+} V3_api_t;
 
-typedef struct GoApi_vtable {
-  int32_t (*humanize_address)(const api_t*, Buffer, Buffer*, Buffer*, uint64_t*);
-  int32_t (*canonicalize_address)(const api_t*, Buffer, Buffer*, Buffer*, uint64_t*);
-} GoApi_vtable;
+typedef struct V3_GoApi_vtable {
+  int32_t (*humanize_address)(const V3_api_t*, V3_Buffer, V3_Buffer*, V3_Buffer*, uint64_t*);
+  int32_t (*canonicalize_address)(const V3_api_t*, V3_Buffer, V3_Buffer*, V3_Buffer*, uint64_t*);
+} V3_GoApi_vtable;
 
-typedef struct GoApi {
-  const api_t *state;
-  GoApi_vtable vtable;
-} GoApi;
+typedef struct V3_GoApi {
+  const V3_api_t *state;
+  V3_GoApi_vtable vtable;
+} V3_GoApi;
 
-typedef struct querier_t {
+typedef struct V3_querier_t {
   uint8_t _private[0];
-} querier_t;
+} V3_querier_t;
 
-typedef struct Querier_vtable {
-  int32_t (*query_external)(const querier_t*, uint64_t, uint64_t*, Buffer, Buffer*, Buffer*);
-} Querier_vtable;
+typedef struct V3_Querier_vtable {
+  int32_t (*query_external)(const V3_querier_t*, uint64_t, uint64_t*, V3_Buffer, V3_Buffer*, V3_Buffer*);
+} V3_Querier_vtable;
 
-typedef struct GoQuerier {
-  const querier_t *state;
-  Querier_vtable vtable;
-} GoQuerier;
+typedef struct V3_GoQuerier {
+  const V3_querier_t *state;
+  V3_Querier_vtable vtable;
+} V3_GoQuerier;
 
-Buffer allocate_rust(const uint8_t *ptr, uintptr_t length);
+V3_Buffer V3_allocate_rust(const uint8_t *ptr, uintptr_t length);
 
-Buffer create(cache_t *cache, Buffer wasm, Buffer *err);
+V3_Buffer V3_create(V3_cache_t *cache, V3_Buffer wasm, V3_Buffer *err);
 
-void free_rust(Buffer buf);
+void V3_free_rust(V3_Buffer buf);
 
-Buffer get_code(cache_t *cache, Buffer id, Buffer *err);
+V3_Buffer V3_get_code(V3_cache_t *cache, V3_Buffer id, V3_Buffer *err);
 
-Buffer handle(cache_t *cache,
-              Buffer code_id,
-              Buffer params,
-              Buffer msg,
-              DB db,
-              GoApi api,
-              GoQuerier querier,
-              uint64_t gas_limit,
-              uint64_t *gas_used,
-              Buffer *err);
+V3_Buffer V3_handle(V3_cache_t *cache,
+                    V3_Buffer code_id,
+                    V3_Buffer params,
+                    V3_Buffer msg,
+                    V3_DB db,
+                    V3_GoApi api,
+                    V3_GoQuerier querier,
+                    uint64_t gas_limit,
+                    uint64_t *gas_used,
+                    V3_Buffer *err);
 
-cache_t *init_cache(Buffer data_dir, Buffer supported_features, uintptr_t _cache_size, Buffer *err);
+V3_cache_t *V3_init_cache(V3_Buffer data_dir,
+                          V3_Buffer supported_features,
+                          uintptr_t _cache_size,
+                          V3_Buffer *err);
 
-Buffer instantiate(cache_t *cache,
-                   Buffer contract_id,
-                   Buffer params,
-                   Buffer msg,
-                   DB db,
-                   GoApi api,
-                   GoQuerier querier,
+V3_Buffer V3_instantiate(V3_cache_t *cache,
+                         V3_Buffer contract_id,
+                         V3_Buffer params,
+                         V3_Buffer msg,
+                         V3_DB db,
+                         V3_GoApi api,
+                         V3_GoQuerier querier,
+                         uint64_t gas_limit,
+                         uint64_t *gas_used,
+                         V3_Buffer *err);
+
+V3_Buffer V3_migrate(V3_cache_t *cache,
+                     V3_Buffer contract_id,
+                     V3_Buffer params,
+                     V3_Buffer msg,
+                     V3_DB db,
+                     V3_GoApi api,
+                     V3_GoQuerier querier,
+                     uint64_t gas_limit,
+                     uint64_t *gas_used,
+                     V3_Buffer *err);
+
+V3_Buffer V3_query(V3_cache_t *cache,
+                   V3_Buffer code_id,
+                   V3_Buffer msg,
+                   V3_DB db,
+                   V3_GoApi api,
+                   V3_GoQuerier querier,
                    uint64_t gas_limit,
                    uint64_t *gas_used,
-                   Buffer *err);
-
-Buffer migrate(cache_t *cache,
-               Buffer contract_id,
-               Buffer params,
-               Buffer msg,
-               DB db,
-               GoApi api,
-               GoQuerier querier,
-               uint64_t gas_limit,
-               uint64_t *gas_used,
-               Buffer *err);
-
-Buffer query(cache_t *cache,
-             Buffer code_id,
-             Buffer msg,
-             DB db,
-             GoApi api,
-             GoQuerier querier,
-             uint64_t gas_limit,
-             uint64_t *gas_used,
-             Buffer *err);
+                   V3_Buffer *err);
 
 /**
  * frees a cache reference
@@ -184,4 +187,4 @@ Buffer query(cache_t *cache,
  * This must be called exactly once for any `*cache_t` returned by `init_cache`
  * and cannot be called on any other pointer.
  */
-void release_cache(cache_t *cache);
+void V3_release_cache(V3_cache_t *cache);

@@ -80,20 +80,19 @@ impl StorageIterator for GoIter {
             }
         }
 
-        let okey = unsafe { key_buf.read() };
-        let result = match okey {
-            Some(key) => {
-                let value = unsafe { value_buf.read() };
-                if let Some(value) = value {
-                    Ok(Some((key.into(), value.into())))
-                } else {
-                    Err(FfiError::unknown(
-                        "Failed to read value while reading the next key in the db",
-                    ))
-                }
-            }
-            None => Ok(None),
+        let result = if key_buf.ptr.is_null() {
+            Ok(None)
+        } else if value_buf.ptr.is_null() {
+            Err(FfiError::unknown(
+                "Failed to read value while reading the next key in the db",
+            ))
+        } else {
+            let key = unsafe { key_buf.consume() };
+            let value = unsafe { value_buf.consume() };
+
+            Ok(Some((key, value)))
         };
+
         (result, gas_info)
     }
 }

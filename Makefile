@@ -78,6 +78,8 @@ release:
 	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code cosmwasm/go-ext-builder:$(TAG_PREFIX)-cross
 	rm -rf target/release
 	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code cosmwasm/go-ext-builder:$(TAG_PREFIX)-centos7
+	rm -rf target/release
+	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code cosmwasm/go-ext-builder:$(TAG_PREFIX)-alpine
 
 test-alpine:
 	# build the muslc *.a file

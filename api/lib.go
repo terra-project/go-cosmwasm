@@ -6,6 +6,7 @@ import "C"
 
 import (
 	"fmt"
+	"sync"
 	"syscall"
 
 	"github.com/CosmWasm/go-cosmwasm/types"
@@ -22,6 +23,7 @@ type cint = C.int
 
 type Cache struct {
 	ptr *C.cache_t
+	mtx *sync.Mutex
 }
 
 type Querier = types.Querier
@@ -37,14 +39,19 @@ func InitCache(dataDir string, supportedFeatures string, cacheSize uint64) (Cach
 	if err != nil {
 		return Cache{}, errorWithMessage(err, errmsg)
 	}
-	return Cache{ptr: ptr}, nil
+	return Cache{ptr: ptr, mtx: new(sync.Mutex)}, nil
 }
 
 func ReleaseCache(cache Cache) {
+	C.mtx.Lock()
+	defer C.mtx.Unlock()
 	C.release_cache(cache.ptr)
 }
 
 func Create(cache Cache, wasm []byte) ([]byte, error) {
+	C.mtx.Lock()
+	defer C.mtx.Unlock()
+
 	code := sendSlice(wasm)
 	defer freeAfterSend(code)
 	errmsg := C.Buffer{}
@@ -56,6 +63,9 @@ func Create(cache Cache, wasm []byte) ([]byte, error) {
 }
 
 func GetCode(cache Cache, code_id []byte) ([]byte, error) {
+	C.mtx.Lock()
+	defer C.mtx.Unlock()
+
 	id := sendSlice(code_id)
 	defer freeAfterSend(id)
 	errmsg := C.Buffer{}
@@ -77,6 +87,9 @@ func Instantiate(
 	querier *Querier,
 	gasLimit uint64,
 ) ([]byte, uint64, error) {
+	C.mtx.Lock()
+	defer C.mtx.Unlock()
+
 	id := sendSlice(code_id)
 	defer freeAfterSend(id)
 	p := sendSlice(params)
@@ -114,6 +127,9 @@ func Handle(
 	querier *Querier,
 	gasLimit uint64,
 ) ([]byte, uint64, error) {
+	C.mtx.Lock()
+	defer C.mtx.Unlock()
+
 	id := sendSlice(code_id)
 	defer freeAfterSend(id)
 	p := sendSlice(params)
@@ -151,6 +167,9 @@ func Migrate(
 	querier *Querier,
 	gasLimit uint64,
 ) ([]byte, uint64, error) {
+	C.mtx.Lock()
+	defer C.mtx.Unlock()
+
 	id := sendSlice(code_id)
 	defer freeAfterSend(id)
 	p := sendSlice(params)
@@ -187,6 +206,9 @@ func Query(
 	querier *Querier,
 	gasLimit uint64,
 ) ([]byte, uint64, error) {
+	C.mtx.Lock()
+	defer C.mtx.Unlock()
+
 	id := sendSlice(code_id)
 	defer freeAfterSend(id)
 	m := sendSlice(msg)

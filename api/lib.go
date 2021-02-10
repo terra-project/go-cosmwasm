@@ -43,14 +43,14 @@ func InitCache(dataDir string, supportedFeatures string, cacheSize uint64) (Cach
 }
 
 func ReleaseCache(cache Cache) {
-	C.mtx.Lock()
-	defer C.mtx.Unlock()
+	cache.mtx.Lock()
+	defer cache.mtx.Unlock()
 	C.release_cache(cache.ptr)
 }
 
 func Create(cache Cache, wasm []byte) ([]byte, error) {
-	C.mtx.Lock()
-	defer C.mtx.Unlock()
+	cache.mtx.Lock()
+	defer cache.mtx.Unlock()
 
 	code := sendSlice(wasm)
 	defer freeAfterSend(code)
@@ -63,8 +63,8 @@ func Create(cache Cache, wasm []byte) ([]byte, error) {
 }
 
 func GetCode(cache Cache, code_id []byte) ([]byte, error) {
-	C.mtx.Lock()
-	defer C.mtx.Unlock()
+	cache.mtx.Lock()
+	defer cache.mtx.Unlock()
 
 	id := sendSlice(code_id)
 	defer freeAfterSend(id)
@@ -87,8 +87,8 @@ func Instantiate(
 	querier *Querier,
 	gasLimit uint64,
 ) ([]byte, uint64, error) {
-	C.mtx.Lock()
-	defer C.mtx.Unlock()
+	cache.mtx.Lock()
+	defer cache.mtx.Unlock()
 
 	id := sendSlice(code_id)
 	defer freeAfterSend(id)
@@ -127,8 +127,8 @@ func Handle(
 	querier *Querier,
 	gasLimit uint64,
 ) ([]byte, uint64, error) {
-	C.mtx.Lock()
-	defer C.mtx.Unlock()
+	cache.mtx.Lock()
+	defer cache.mtx.Unlock()
 
 	id := sendSlice(code_id)
 	defer freeAfterSend(id)
@@ -167,8 +167,8 @@ func Migrate(
 	querier *Querier,
 	gasLimit uint64,
 ) ([]byte, uint64, error) {
-	C.mtx.Lock()
-	defer C.mtx.Unlock()
+	cache.mtx.Lock()
+	defer cache.mtx.Unlock()
 
 	id := sendSlice(code_id)
 	defer freeAfterSend(id)
@@ -206,8 +206,8 @@ func Query(
 	querier *Querier,
 	gasLimit uint64,
 ) ([]byte, uint64, error) {
-	C.mtx.Lock()
-	defer C.mtx.Unlock()
+	cache.mtx.Lock()
+	defer cache.mtx.Unlock()
 
 	id := sendSlice(code_id)
 	defer freeAfterSend(id)

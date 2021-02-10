@@ -3,6 +3,7 @@ package cosmwasm
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/CosmWasm/go-cosmwasm/api"
 	"github.com/CosmWasm/go-cosmwasm/types"
@@ -30,6 +31,7 @@ type GasMeter = api.GasMeter
 // You should create an instance with it's own subdirectory to manage state inside,
 // and call it for all cosmwasm code related actions.
 type Wasmer struct {
+	mtx   *sync.Mutex
 	cache api.Cache
 }
 
@@ -43,7 +45,7 @@ func NewWasmer(dataDir string, supportedFeatures string, cacheSize uint64) (*Was
 	if err != nil {
 		return nil, err
 	}
-	return &Wasmer{cache: cache}, nil
+	return &Wasmer{cache: cache, mtx: new(sync.Mutex)}, nil
 }
 
 // Cleanup should be called when no longer using this to free resources on the rust-side
@@ -162,6 +164,10 @@ func (w *Wasmer) Query(
 	gasMeter GasMeter,
 	gasLimit uint64,
 ) ([]byte, uint64, error) {
+	// Only Query requires locking because all other methods are using RWMutex.Lock in above scope.
+	w.mtx.Lock()
+	defer w.mtx.Unlock()
+
 	data, gasUsed, err := api.Query(w.cache, code, queryMsg, &gasMeter, store, &goapi, &querier, gasLimit)
 	if err != nil {
 		return nil, gasUsed, err

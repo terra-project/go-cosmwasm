@@ -464,7 +464,7 @@ checksum = "bcc8e0c9bce37868955864dbecd2b1ab2bdf967e6f28066d65aaac620444b65c"
 
 [[package]]
 name = "go-cosmwasm"
-version = "0.10.3"
+version = "0.10.5"
 dependencies = [
  "cbindgen",
  "cosmwasm-std",

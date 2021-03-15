@@ -22,7 +22,7 @@ use cosmwasm_vm::{
     Cache, Extern, CacheOptions, Size
 };
 
-const MEMORY_CACHE_SIZE: Size = Size::mebi(500); // TODO: Make configurable
+const MEMORY_CACHE_SIZE: Size = Size::gibi(2); // TODO: Make configurable
 
 #[repr(C)]
 pub struct cache_t {}

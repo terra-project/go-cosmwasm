@@ -1,5 +1,5 @@
 # we build with go and rust
-FROM golang:1.14-alpine3.12
+FROM golang:1.15-alpine3.12
 
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \

@@ -1,7 +1,6 @@
-.PHONY: all build build-rust build-go test docker-image docker-image-centos7 docker-image-cross
+.PHONY: all build build-rust build-go test
 
-# Versioned by a simple counter that is not bound to a specific CosmWasm version
-TAG_PREFIX := 0001
+BUILDERS_PREFIX := cosmwasm/go-ext-builder:0.8.2
 USER_ID := $(shell id -u)
 USER_GROUP = $(shell id -g)
 
@@ -26,14 +25,15 @@ build: build-rust build-go
 # build-rust: build-rust-release strip
 build-rust: build-rust-release
 
-# use debug build for quick testing
+# Use debug build for quick testing.
+# In order to use "--features backtraces" here we need a Rust nightly toolchain, which we don't have by default
 build-rust-debug:
-	cargo build --features backtraces
+	cargo build
 	cp target/debug/libgo_cosmwasm.$(DLL_EXT) api
 
 # use release build to actually ship - smaller and much faster
 build-rust-release:
-	cargo build --release --features backtraces
+	cargo build --release
 	cp target/release/libgo_cosmwasm.$(DLL_EXT) api
 	@ #this pulls out ELF symbols, 80% size reduction!
 
@@ -55,39 +55,34 @@ test:
 test-safety:
 	GODEBUG=cgocheck=2 go test -race -v -count 1 ./api
 
-# we should build all the docker images locally ONCE and publish them
-docker-image-centos7:
-	docker build . -t cosmwasm/go-ext-builder:$(TAG_PREFIX)-centos7 -f ./Dockerfile.centos7
-
-docker-image-cross:
-	docker build . -t cosmwasm/go-ext-builder:$(TAG_PREFIX)-cross -f ./Dockerfile.cross
-
-docker-image-alpine:
-	docker build . -t cosmwasm/go-ext-builder:$(TAG_PREFIX)-alpine -f ./Dockerfile.alpine
-
-docker-images: docker-image-centos7 docker-image-cross docker-image-alpine
-
-docker-publish: docker-images
-	docker push cosmwasm/go-ext-builder:$(TAG_PREFIX)-cross
-	docker push cosmwasm/go-ext-builder:$(TAG_PREFIX)-centos7
-	docker push cosmwasm/go-ext-builder:$(TAG_PREFIX)-alpine
-
-# and use them to compile release builds
-release:
+# Creates a release build in a containerized build environment of the static library for Alpine Linux (.a)
+release-build-alpine:
 	rm -rf target/release
-	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code cosmwasm/go-ext-builder:$(TAG_PREFIX)-cross
-	rm -rf target/release
-	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code cosmwasm/go-ext-builder:$(TAG_PREFIX)-centos7
-
-test-alpine:
 	# build the muslc *.a file
-	rm -rf target/release/examples
-	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code cosmwasm/go-ext-builder:$(TAG_PREFIX)-alpine
+	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code $(BUILDERS_PREFIX)-alpine
 	# try running go tests using this lib with muslc
-	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code -w /code cosmwasm/go-ext-builder:$(TAG_PREFIX)-alpine go build -tags muslc .
-	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code -w /code cosmwasm/go-ext-builder:$(TAG_PREFIX)-alpine go test -tags muslc ./api ./types
+	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code -w /code $(BUILDERS_PREFIX)-alpine go build -tags muslc .
+	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code -w /code $(BUILDERS_PREFIX)-alpine go test -tags muslc ./api ./types
+
+# Creates a release build in a containerized build environment of the shared library for glibc Linux (.so)
+release-build-linux:
+	rm -rf target/release
+	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code $(BUILDERS_PREFIX)-centos7
+
+# Creates a release build in a containerized build environment of the shared library for macOS (.dylib)
+release-build-macos:
+	rm -rf target/release
+	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code $(BUILDERS_PREFIX)-cross
+
+release-build:
+	# Write like this because those must not run in parallal
+	make release-build-alpine
+	make release-build-linux
+	make release-build-macos
+
+test-alpine: release-build-alpine
 	# build a go binary
-	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code -w /code cosmwasm/go-ext-builder:$(TAG_PREFIX)-alpine go build -tags muslc -o muslc.exe ./cmd
+	docker run --rm -u $(USER_ID):$(USER_GROUP) -v $(shell pwd):/code -w /code $(BUILDERS_PREFIX)-alpine go build -tags muslc -o muslc.exe ./cmd
 	# run static binary in an alpine machines (not dlls)
 	docker run --rm --read-only -v $(shell pwd):/code -w /code alpine:3.12 ./muslc.exe ./api/testdata/hackatom.wasm
 	docker run --rm --read-only -v $(shell pwd):/code -w /code alpine:3.11 ./muslc.exe ./api/testdata/hackatom.wasm
